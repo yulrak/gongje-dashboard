@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2025년 공제회별 자산운용 현황 비교 v3</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --surface2: #f0f2f5;
+    --border: #e2e6ea;
+    --text: #1a1f2e;
+    --text-muted: #6b7280;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .header {
+    background: #ffffff;
+    border-bottom: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  }
+  .header-left h1 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(90deg, #f43f5e, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .header-left p { font-size: 0.76rem; color: var(--text-muted); margin-top: 3px; }
+  .badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 0.75rem; color: var(--text-muted); }
+  .badge span { color: #fb923c; font-weight: 700; }
+
+  .tab-nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 40px; display: flex; gap: 0; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--text-muted); font-family: inherit; font-size: 0.85rem; font-weight: 500; padding: 14px 22px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: #f43f5e; border-bottom-color: #f43f5e; font-weight: 700; }
+
+  main { padding: 28px 40px; max-width: 1440px; margin: 0 auto; }
+  .view { display: none; }
+  .view.active { display: block; animation: fadeUp 0.3s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .section-title { font-size: 0.9rem; font-weight: 700; color: var(--text); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+  .section-title::before { content: ''; width: 3px; height: 16px; background: #f43f5e; border-radius: 2px; }
+
+  /* KPI */
+  .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 24px; }
+  .kpi-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 15px;
+    position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; cursor: default;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.10); }
+  .kpi-card.is-us { border-color: #f43f5e; box-shadow: 0 0 0 1px #f43f5e33; }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 12px 12px 0 0; }
+  .kpi-org { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+  .kpi-aum { font-size: 0.95rem; font-weight: 800; margin: 5px 0 2px; letter-spacing: -0.02em; }
+  .kpi-return { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; }
+  .kpi-label { font-size: 0.66rem; color: var(--text-muted); margin-top: 2px; }
+  .kpi-income { font-size: 0.72rem; font-weight: 600; color: var(--text); margin-top: 3px; }
+  .rank-badge { position: absolute; top: 10px; right: 10px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.62rem; font-weight: 800; }
+  .rank-1 { background: #fbbf24; color: #000; }
+  .rank-2 { background: #94a3b8; color: #000; }
+  .rank-3 { background: #b45309; color: #fff; }
+  .rank-o { background: var(--surface2); color: var(--text-muted); }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+  .mb20 { margin-bottom: 20px; }
+  .mb24 { margin-bottom: 24px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+  .grid-65 { display: grid; grid-template-columns: 6fr 4fr; gap: 18px; margin-bottom: 18px; }
+
+  .chart-wrap { position: relative; width: 100%; }
+  .h260 { height: 260px; } .h300 { height: 300px; } .h340 { height: 340px; } .h380 { height: 380px; } .h420 { height: 420px; }
+
+  /* Table */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  thead tr { background: var(--surface2); }
+  th { padding: 9px 12px; text-align: right; color: var(--text-muted); font-weight: 600; font-size: 0.73rem; white-space: nowrap; border-bottom: 1px solid var(--border); }
+  th:first-child { text-align: left; }
+  td { padding: 9px 12px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; color: var(--text); }
+  td:first-child { text-align: left; font-weight: 600; }
+  tr:hover td { background: rgba(244,63,94,0.04); }
+  .tr-total td { background: rgba(244,63,94,0.07); font-weight: 700; border-top: 1px solid var(--border); }
+  .tr-us td { background: rgba(244,63,94,0.12) !important; }
+
+  .up { color: #16a34a; }
+  .down { color: #dc2626; }
+  .nm { color: var(--text-muted); }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
+  /* Alloc tab */
+  .alloc-section-title { font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* Org filter */
+  .org-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .org-chip { padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+  .org-chip.active { color: #000; border-color: transparent; }
+  .org-chip:hover { opacity: 0.8; }
+
+  /* Heat table */
+  .heat-cell { font-weight: 700; border-radius: 4px; padding: 6px 10px !important; }
+
+  .footnote { font-size: 0.71rem; color: var(--text-muted); margin-top: 12px; line-height: 1.7; border-top: 1px solid var(--border); padding-top: 10px; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    main { padding: 20px; }
+    .header { padding: 18px 20px; }
+    .tab-nav { padding: 0 20px; }
+    .grid-2, .grid-65 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h1>2025년 공제회별 자산운용 현황 비교</h1>
+    <p>기준일: 2025.12.31 (가결산) &nbsp;|&nbsp; 평잔기준 수익률 &nbsp;|&nbsp; 단위: 억원, % &nbsp;|&nbsp; 노란우산공제 제외</p>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <div class="badge">비교대상 <span>6개 공제회</span></div>
+    <div class="badge" style="color:#f43f5e;border-color:#f43f5e44">● 소방공제회</div>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('overview',this)">종합 현황</button>
+  <button class="tab-btn" onclick="switchTab('allocation',this)">자산배분 비교</button>
+  <button class="tab-btn" onclick="switchTab('performance',this)">수익률 상세</button>
+  <button class="tab-btn" onclick="switchTab('detail',this)">기관별 상세</button>
+</nav>
+
+<main>
+
+<!-- ======== TAB1: 종합 ======== -->
+<div id="view-overview" class="view active">
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <div class="grid-65">
+    <div class="card">
+      <div class="section-title">기금자산 수익률 비교</div>
+      <div class="chart-wrap h340"><canvas id="returnBarChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="section-title">총자산 규모 비교 (억원)</div>
+      <div class="chart-wrap h340"><canvas id="aumBarChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card mb20">
+    <div class="section-title">수익률 × 규모 매트릭스</div>
+    <div class="chart-wrap" style="height:420px"><canvas id="scatterChart"></canvas></div>
+    <p class="footnote">※ 원의 크기: 총자산 규모 &nbsp;|&nbsp; X축: 위험자산 비중(주식+대체, 기금자산 기준) &nbsp;|&nbsp; Y축: 기금자산 수익률 &nbsp;|&nbsp; 마우스 올리면 상세 수치 표시</p>
+  </div>
+
+  <div class="card mb20">
+    <div class="section-title">자산군 수익률 히트맵</div>
+    <div class="tbl-wrap" style="margin-top:4px"><table id="heatTable"></table></div>
+    <p class="footnote">※ 색상 진할수록 높은 수익률 &nbsp;|&nbsp; '-': 해당 자산군 미운용 또는 정보 미제공</p>
+  </div>
+
+  <div class="card mb20">
+    <div class="section-title">공제회별 핵심 지표 종합</div>
+    <div class="tbl-wrap"><table id="summaryTable"></table></div>
+    <p class="footnote">
+      ※ 가결산 기준(2025.12.31) &nbsp;|&nbsp; 수익률: 평잔기준(실질손익/평잔)<br>
+      ※ 군인공제회는 투자자산 기준 구성비 &nbsp;|&nbsp; 과기인공제회 총자산은 '25.11월말 기준 (결산 미종료)
+    </p>
+  </div>
+</div>
+
+<!-- ======== TAB2: 자산배분 ======== -->
+<div id="view-allocation" class="view">
+
+  <!-- 섹션 A: 기금자산 100% 기준 -->
+  <div class="card mb20">
+    <div class="section-title">기금자산 기준 자산배분 (기금자산=100%)</div>
+    <div class="grid-3" style="margin-bottom:0">
+      <div id="pieWrap1" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;grid-column:1/-1"></div>
+    </div>
+    <p class="footnote">※ 기금자산 = 주식 + 채권 + 대체투자 + 단기자금 + 전략투자 합산 &nbsp;|&nbsp; 각 원의 합계는 100%</p>
+  </div>
+
+  <!-- 섹션 B: 총자산 100% 기준 -->
+  <div class="card mb20">
+    <div class="section-title">총자산 기준 자산배분 (총자산=100%, 기타자산 포함)</div>
+    <div id="pieWrap2" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px"></div>
+    <p class="footnote">※ 기타자산 = 총자산 - 기금자산 (회원대출, 부동산 등 비투자성 자산 포함)</p>
+  </div>
+
+  <!-- 누적 막대 비교 -->
+  <div class="card mb20">
+    <div class="section-title">자산군 구성비 비교 — 누적 막대 (기금자산 기준)</div>
+    <div class="chart-wrap h300"><canvas id="allocStackChart"></canvas></div>
+  </div>
+
+  <!-- 구성비 상세 테이블 -->
+  <div class="card">
+    <div class="section-title">자산군별 구성비 상세</div>
+    <div class="tbl-wrap"><table id="allocTable"></table></div>
+    <p class="footnote">※ 기금자산% = 기금자산 대비 비중 &nbsp;|&nbsp; 총자산% = 총자산 대비 비중</p>
+  </div>
+</div>
+
+<!-- ======== TAB3: 수익률 ======== -->
+<div id="view-performance" class="view">
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">주식 수익률 비교</div>
+      <div class="chart-wrap h260"><canvas id="perfEquity"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="section-title">채권 수익률 비교</div>
+      <div class="chart-wrap h260"><canvas id="perfBond"></canvas></div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">대체투자 수익률 비교</div>
+      <div class="chart-wrap h260"><canvas id="perfAlt"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="section-title">단기자금 수익률 비교</div>
+      <div class="chart-wrap h260"><canvas id="perfShort"></canvas></div>
+    </div>
+  </div>
+  <div class="card mb20">
+    <div class="section-title">자산군별 수익률 상세</div>
+    <div class="tbl-wrap"><table id="perfTable"></table></div>
+    <p class="footnote">※ 수익률: 평잔기준 &nbsp;|&nbsp; '-': 미운용 또는 정보 미제공 &nbsp;|&nbsp; 경찰공제회 국내/해외 구분 미제공</p>
+  </div>
+</div>
+
+<!-- ======== TAB4: 기관별 ======== -->
+<div id="view-detail" class="view">
+  <div class="org-filter" id="orgFilter"></div>
+  <div id="detailContent"></div>
+</div>
+
+</main>
+
+<script>
+Chart.register(ChartDataLabels);
+
+// ===================== DATA =====================
+// 순서: 소방 → 자산 작은 순 (경찰, 과기인, 군인, 행정, 교직원)
+const ORGS = [
+  { key: '소방',   full: '대한소방공제회',    color: '#f43f5e', isUs: true },
+  { key: '경찰',   full: '경찰공제회',        color: '#4f9cf9', isUs: false },
+  { key: '과기인', full: '과학기술인공제회',   color: '#f97316', isUs: false },
+  { key: '군인',   full: '군인공제회',        color: '#22c55e', isUs: false },
+  { key: '행정',   full: '대한지방행정공제회', color: '#eab308', isUs: false },
+  { key: '교직원', full: '한국교직원공제회',   color: '#14b8a6', isUs: false },
+];
+
+const DATA = {
+  '소방': {
+    totalAsset: 30064,
+    fundAsset: 28324,
+    fundReturn: 10.95,
+    income: 2672,
+    stock:    { total: 5485,  pct_t: 18.24, domestic: 2372,  foreign: 3113,  ret_all: 41.79, ret_dom: 84.76, ret_for: 17.75 },
+    bond:     { total: 10057, pct_t: 33.45, domestic: 7598,  foreign: 2459,  ret_all: 5.34,  ret_dom: 4.39,  ret_for: 8.92 },
+    alt:      { total: 11120, pct_t: 36.99, domestic: 3274,  foreign: 7846,  ret_all: 7.2,   ret_dom: 8.8,   ret_for: 6.5 },
+    short:    { total: 1662,  pct_t: 5.53,  ret: 1.9 },
+    strat:    { total: 0,     pct_t: 0 },
+    note: ''
+  },
+  '경찰': {
+    totalAsset: 76243,
+    fundAsset: 68242,
+    fundReturn: 7.94,  // 4284/68242*100 ≈ 6.28% → 원본 수익률 컬럼 기준으로 수정 필요, 원본값 사용
+    income: 4285,
+    stock:    { total: 5346,  pct_t: 7.01,  domestic: 2415,  foreign: 2931,  ret_all: 28.50, ret_dom: 39.51, ret_for: 17.30 },
+    bond:     { total: 13424, pct_t: 17.61, domestic: 13145, foreign: 279,   ret_all: 4.03,  ret_dom: 4.17,  ret_for: -1.54 },
+    alt:      { total: 34771, pct_t: 45.61, domestic: 12964, foreign: 21807, ret_all: 6.18,  ret_dom: 16.56, ret_for: 1.17 },
+    short:    { total: 14701, pct_t: 19.28, ret: null },
+    strat:    { total: 0,     pct_t: 0 },
+    note: '국내/해외 세부 수익률 산출 기준 상이할 수 있음'
+  },
+  '과기인': {
+    totalAsset: 168554,
+    fundAsset: 154092,
+    fundReturn: 9.5,
+    income: 13422,
+    stock:    { total: 20743, pct_t: 12.31, domestic: 13668, foreign: 7075,  ret_all: 41.0,  ret_dom: 57.3,  ret_for: 16.7 },
+    bond:     { total: 15758, pct_t: 9.35,  domestic: 8551,  foreign: 7206,  ret_all: 4.1,   ret_dom: 5.2,   ret_for: 2.3 },
+    alt:      { total: 110508,pct_t: 65.56, domestic: 49591, foreign: 60917, ret_all: 6.2,   ret_dom: 7.8,   ret_for: 5.0 },
+    short:    { total: 4917,  pct_t: 2.92,  ret: 2.8 },
+    strat:    { total: 2166,  pct_t: 1.29 },
+    note: "총자산은 '25.11월말 기준"
+  },
+  '군인': {
+    totalAsset: 244868,
+    fundAsset: 149874,
+    fundReturn: 11.8,
+    income: 15718,
+    stock:    { total: 17205, pct_t: 7.03,  domestic: 9951,  foreign: 7254,  ret_all: 34.8,  ret_dom: 50.0,  ret_for: 13.9 },
+    bond:     { total: 19844, pct_t: 8.10,  domestic: 11988, foreign: 7856,  ret_all: 4.6,   ret_dom: 3.6,   ret_for: 6.1 },
+    alt:      { total: 112825,pct_t: 46.08, domestic: 55703, foreign: 57121, ret_all: 10.2,  ret_dom: 13.6,  ret_for: 6.5 },
+    short:    { total: 0,     pct_t: 0,     ret: null },
+    strat:    { total: 0,     pct_t: 0 },
+    note: '투자자산 기준 구성비. 기타자산(94,994억) 포함 총자산 244,868억'
+  },
+  '행정': {
+    totalAsset: 338396,
+    fundAsset: 318966,
+    fundReturn: 9.3,
+    income: 27117,
+    stock:    { total: 41516, pct_t: 12.27, domestic: 24760, foreign: 16756, ret_all: 48.4,  ret_dom: 72.5,  ret_for: 21.0 },
+    bond:     { total: 23104, pct_t: 6.83,  domestic: 9944,  foreign: 13160, ret_all: 3.4,   ret_dom: 3.2,   ret_for: 3.5 },
+    alt:      { total: 237093,pct_t: 70.06, domestic: 54020, foreign: 183073,ret_all: 5.6,   ret_dom: 5.5,   ret_for: 5.7 },
+    short:    { total: 11052, pct_t: 3.27,  ret: 2.0 },
+    strat:    { total: 6201,  pct_t: 1.83 },
+    note: ''
+  },
+  '교직원': {
+    totalAsset: 860736,
+    fundAsset: 729598,
+    fundReturn: 10.6,
+    income: 70124,
+    stock:    { total: 129567,pct_t: 15.05, domestic: 54621, foreign: 74946, ret_all: 38.0,  ret_dom: 73.8,  ret_for: 16.8 },
+    bond:     { total: 120092,pct_t: 13.95, domestic: 62281, foreign: 57811, ret_all: 5.0,   ret_dom: 3.3,   ret_for: 7.0 },
+    alt:      { total: 454724,pct_t: 52.83, domestic: 155789,foreign: 298935,ret_all: 5.6,   ret_dom: 8.3,   ret_for: 4.3 },
+    short:    { total: 25215, pct_t: 2.93,  ret: 2.3 },
+    strat:    { total: 0,     pct_t: 0 },
+    note: ''
+  },
+};
+
+const KEYS = ORGS.map(o => o.key);
+const COLORS = ORGS.map(o => o.color);
+
+// ===================== HELPERS =====================
+function fmt(n, d=0) { if (n===null||n===undefined||isNaN(n)) return '-'; return Number(n).toLocaleString('ko-KR',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function fmtP(n,d=2) { if (n===null||n===undefined||isNaN(n)) return '-'; return n.toFixed(d)+'%'; }
+function cc(n) { if (n===null||isNaN(n)) return 'nm'; return n>0?'up':n<0?'down':'nm'; }
+
+// Chart defaults
+const GR = { color: 'rgba(226,230,234,0.8)' };
+const TX = { color: '#6b7280', font: { size: 10 } };
+const baseOpts = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { labels: { color: '#6b7280', font: { size: 10 }, boxWidth: 10 } }, datalabels: { display: false } },
+  scales: { x: { ticks: TX, grid: GR }, y: { ticks: TX, grid: GR } }
+};
+
+// ===================== TAB 1 =====================
+function buildKPI() {
+  const rets = KEYS.map(k => DATA[k].fundReturn);
+  const sorted = [...rets].sort((a,b)=>b-a);
+  const grid = document.getElementById('kpiGrid');
+  grid.innerHTML = '';
+  ORGS.forEach((org, i) => {
+    const d = DATA[org.key];
+    const rk = sorted.indexOf(d.fundReturn)+1;
+    const rc = rk<=3?`rank-${rk}`:'rank-o';
+    const card = document.createElement('div');
+    card.className = 'kpi-card'+(org.isUs?' is-us':'');
+    card.style.cssText = `--c:${org.color}`;
+    card.innerHTML = `
+      <div class="rank-badge ${rc}">${rk}</div>
+      <style>.kpi-card:nth-child(${i+1})::before{background:${org.color}}</style>
+      <div class="kpi-org">${org.isUs?'🔴 ':''}<b style="color:${org.color}">${org.key}</b>${org.isUs?' (당사)':''}</div>
+      <div class="kpi-aum" style="color:${org.color}">${(d.totalAsset/10000).toFixed(1)}조원</div>
+      <div class="kpi-return" style="color:${org.color}">${d.fundReturn.toFixed(2)}<span style="font-size:0.75rem;font-weight:500">%</span></div>
+      <div class="kpi-label">기금자산 수익률</div>
+      <div class="kpi-income">손익 ${fmt(Math.round(d.income))}억</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function buildReturnBar() {
+  const ctx = document.getElementById('returnBarChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: KEYS,
+      datasets: [{
+        label: '기금자산 수익률 (%)',
+        data: KEYS.map(k=>DATA[k].fundReturn),
+        backgroundColor: COLORS.map(c=>c+'cc'),
+        borderColor: COLORS,
+        borderWidth: 1.5,
+        borderRadius: 6,
+      }]
+    },
+    options: { ...baseOpts,
+      plugins: { ...baseOpts.plugins,
+        datalabels: { display:true, color:'#1a1f2e', anchor:'end', align:'top', font:{size:11,weight:700}, formatter:v=>v.toFixed(2)+'%' }
+      },
+      scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, min:0, max:16, title:{display:true,text:'수익률 (%)',color:'#6b7280',font:{size:10}} } }
+    }
+  });
+}
+
+function buildAUMBar() {
+  const ctx = document.getElementById('aumBarChart').getContext('2d');
+  // 억원 → 조원: 1조 = 10,000억
+  const fundVals  = KEYS.map(k => Math.round(DATA[k].fundAsset/10000*10)/10);
+  const otherVals = KEYS.map(k => Math.round((DATA[k].totalAsset - DATA[k].fundAsset)/10000*10)/10);
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: KEYS,
+      datasets: [
+        {
+          label: '기금자산',
+          data: fundVals,
+          backgroundColor: COLORS.map(c=>c+'cc'),
+          borderColor: COLORS,
+          borderWidth: 1,
+          borderRadius: 0,
+        },
+        {
+          label: '기타자산',
+          data: otherVals,
+          backgroundColor: '#334155cc',
+          borderColor: '#475569',
+          borderWidth: 1,
+          borderRadius: { topRight: 4, bottomRight: 4 },
+        }
+      ]
+    },
+    options: { ...baseOpts,
+      indexAxis: 'y',
+      scales: {
+        x: {
+          ...baseOpts.scales.x,
+          stacked: true,
+          title: { display:true, text:'조원', color:'#6b7280', font:{size:10} },
+        },
+        y: { ...baseOpts.scales.y, stacked: true }
+      },
+      plugins: { ...baseOpts.plugins,
+        legend: { position:'top', labels:{ color:'#6b7280', font:{size:10}, boxWidth:10 } },
+        datalabels: {
+          display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0.5,
+          color: '#1a1f2e',
+          anchor: 'center',
+          align: 'center',
+          font: { size: 9, weight: 700 },
+          formatter: (v) => v.toFixed(1) + '조'
+        }
+      }
+    }
+  });
+}
+
+function buildScatter() {
+  const ctx = document.getElementById('scatterChart').getContext('2d');
+
+  // 원 크기 = 총자산 규모에 비례
+  // 면적이 총자산에 비례하도록 반지름 = √총자산 기준 정규화
+  const sqrtAssets = ORGS.map(org => Math.sqrt(DATA[org.key].totalAsset));
+  const minSqrt = Math.min(...sqrtAssets);
+  const maxSqrt = Math.max(...sqrtAssets);
+
+  const datasets = ORGS.map((org, i) => {
+    const d = DATA[org.key];
+    const riskPct = (d.stock.total + d.alt.total) / d.fundAsset * 100;
+    const t = (sqrtAssets[i] - minSqrt) / (maxSqrt - minSqrt);
+    const radius = Math.round(10 + t * 34);
+    return {
+      label: org.key,
+      data: [{ x: riskPct, y: d.fundReturn }],
+      backgroundColor: org.color + '99',
+      borderColor: org.color,
+      borderWidth: org.isUs ? 3 : 1.5,
+      pointRadius: radius,
+      pointHoverRadius: radius + 3,
+    };
+  });
+
+  new Chart(ctx, {
+    type: 'bubble',
+    data: { datasets },
+    options: { ...baseOpts,
+      plugins: { ...baseOpts.plugins,
+        legend: { position:'bottom', labels:{color:'#6b7280',font:{size:10},boxWidth:10,padding:16} },
+        datalabels: { display:true, color:'#fff', font:{size:9,weight:700}, formatter:(v,c)=>c.dataset.label },
+        tooltip: { callbacks: { label: ctx => {
+          const k = ctx.dataset.label; const d = DATA[k];
+          const rPct = ((d.stock.total + d.alt.total) / d.fundAsset * 100).toFixed(1);
+          return [
+            `위험자산 비중: ${rPct}%`,
+            `기금수익률: ${d.fundReturn.toFixed(2)}%`,
+            `총자산: ${(d.totalAsset/10000).toFixed(1)}조원`,
+          ];
+        }}}
+      },
+      scales: {
+        x: { ...baseOpts.scales.x,
+          title: { display:true, text:'위험자산 비중 — 주식+대체 (%, 기금자산 기준)', color:'#6b7280', font:{size:11} },
+          min: 40, max: 100,
+          ticks: { color:'#6b7280', font:{size:10}, stepSize: 10,
+            callback: v => v + '%'
+          }
+        },
+        y: { ...baseOpts.scales.y,
+          title: { display:true, text:'기금자산 수익률 (%)', color:'#6b7280', font:{size:11} },
+          min: 6, max: 14,
+          ticks: { ...TX, stepSize: 1, callback: v => v + '%' }
+        }
+      }
+    }
+  });
+}
+
+function buildHeatTable() {
+  const tbl = document.getElementById('heatTable');
+  const rows = [
+    { label: '기금수익률', getter: d => d.fundReturn },
+    { label: '주식',     getter: d => d.stock.ret_all },
+    { label: '채권',     getter: d => d.bond.ret_all },
+    { label: '대체투자', getter: d => d.alt.ret_all },
+    { label: '단기자금', getter: d => d.short.ret },
+  ];
+
+  // 단일 색상(붉은색) 진하기만 변화: 연한 분홍(낮) → 진한 빨강(높)
+  function heatColor(val, min, max) {
+    if (val===null||isNaN(val)) return '';
+    const t = Math.max(0, Math.min(1, (val-min)/(max-min||1)));
+    const alpha = 0.15 + t * 0.82;
+    const textColor = t > 0.45 ? '#fff' : '#fecaca';
+    return `background:rgba(239,68,68,${alpha.toFixed(2)});color:${textColor}`;
+  }
+
+  tbl.innerHTML = `<thead><tr>
+    <th style="text-align:left">구분</th>
+    ${ORGS.map((o,i)=>`<th><span class="dot" style="background:${o.color}"></span>${o.key}</th>`).join('')}
+  </tr></thead><tbody>
+  ${rows.map(row => {
+    const vals = KEYS.map(k => row.getter(DATA[k]));
+    const nums = vals.filter(v=>v!==null&&!isNaN(v));
+    const mn = Math.min(...nums), mx = Math.max(...nums);
+    const isSub = row.label.startsWith('─');
+    return `<tr>
+      <td style="${isSub?'padding-left:20px;color:var(--text-muted);font-weight:400;font-size:0.76rem':''}">${row.label}</td>
+      ${vals.map(v => v===null ? `<td class="nm heat-cell">-</td>` : `<td class="heat-cell" style="${heatColor(v,mn,mx)}">${v.toFixed(1)}%</td>`).join('')}
+    </tr>`;
+  }).join('')}
+  </tbody>`;
+}
+
+function buildSummaryTable() {
+  const tbl = document.getElementById('summaryTable');
+  const rets = KEYS.map(k=>DATA[k].fundReturn);
+  const sorted = [...rets].sort((a,b)=>b-a);
+  tbl.innerHTML = `<thead><tr>
+    <th style="text-align:left">공제회</th>
+    <th>총자산(억)</th><th>기금자산(억)</th><th>기타자산(억)</th><th>기금손익(억)</th>
+    <th>기금수익률</th><th>수익률순위</th>
+    <th>주식%</th><th>채권%</th><th>대체%</th><th>단기%</th><th>비고</th>
+  </tr></thead><tbody>
+  ${ORGS.map((org,i) => {
+    const d = DATA[org.key];
+    const rk = sorted.indexOf(d.fundReturn)+1;
+    const other = d.totalAsset - d.fundAsset;
+    return `<tr class="${org.isUs?'tr-us':''}">
+      <td><span class="dot" style="background:${org.color}"></span><b>${org.key}</b>${org.isUs?' ★':''}</td>
+      <td>${fmt(d.totalAsset)}</td>
+      <td>${fmt(d.fundAsset)}</td>
+      <td>${fmt(Math.round(other))}</td>
+      <td>${fmt(Math.round(d.income))}</td>
+      <td class="up" style="font-weight:800">${d.fundReturn.toFixed(2)}%</td>
+      <td style="text-align:center;font-weight:700">${rk}위</td>
+      <td>${(d.stock.total/d.fundAsset*100).toFixed(1)}%</td>
+      <td>${(d.bond.total/d.fundAsset*100).toFixed(1)}%</td>
+      <td>${(d.alt.total/d.fundAsset*100).toFixed(1)}%</td>
+      <td>${d.short.total>0?(d.short.total/d.fundAsset*100).toFixed(1)+'%':'-'}</td>
+      <td style="font-size:0.7rem;color:var(--text-muted)">${d.note}</td>
+    </tr>`;
+  }).join('')}
+  </tbody>`;
+}
+
+// ===================== TAB 2: 자산배분 =====================
+const PIE_COLORS = {
+  '주식':    '#4f9cf9',
+  '국내주식':'#60a5fa',
+  '해외주식':'#93c5fd',
+  '채권':    '#22c55e',
+  '국내채권':'#4ade80',
+  '해외채권':'#86efac',
+  '대체투자':'#a855f7',
+  '국내대체':'#c084fc',
+  '해외대체':'#d8b4fe',
+  '단기자금':'#f97316',
+  '전략투자':'#eab308',
+  '기타자산':'#475569',
+};
+
+let pieCharts = [];
+
+function buildPies() {
+  pieCharts.forEach(c => c.destroy());
+  pieCharts = [];
+
+  // 기금자산 100% 기준
+  const wrap1 = document.getElementById('pieWrap1');
+  wrap1.innerHTML = '';
+
+  // 총자산 100% 기준
+  const wrap2 = document.getElementById('pieWrap2');
+  wrap2.innerHTML = '';
+
+  ORGS.forEach((org, i) => {
+    const d = DATA[org.key];
+    const fa = d.fundAsset;
+    const ta = d.totalAsset;
+    const other = ta - fa;
+
+    // ---- 기금자산 100% 파이 ----
+    const div1 = document.createElement('div');
+    div1.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column';
+    div1.innerHTML = `
+      <div style="font-size:0.76rem;font-weight:700;color:${org.color};margin-bottom:8px;text-align:center">${org.key}</div>
+      <div style="position:relative;height:130px"><canvas id="pie1_${i}"></canvas></div>
+      <div id="pie1leg_${i}" style="margin-top:10px;display:flex;flex-direction:column;gap:4px"></div>
+    `;
+    wrap1.appendChild(div1);
+
+    const ctx1 = div1.querySelector(`#pie1_${i}`).getContext('2d');
+    const allLabels1 = ['주식','채권','대체투자','단기자금','전략투자'];
+    const allVals1   = [d.stock.total, d.bond.total, d.alt.total, d.short.total, d.strat.total];
+    const labels1 = allLabels1.filter((_,idx) => allVals1[idx] > 0);
+    const vals1   = allVals1.filter(v => v > 0);
+    const cols1   = labels1.map(l => PIE_COLORS[l]);
+    const total1  = vals1.reduce((a,b) => a+b, 0);
+
+    const c1 = new Chart(ctx1, {
+      type:'doughnut',
+      data:{ labels:labels1, datasets:[{ data:vals1, backgroundColor:cols1, borderColor:'#ffffff', borderWidth:2 }] },
+      options:{
+        responsive:true, maintainAspectRatio:false, cutout:'52%',
+        plugins:{
+          legend:{ display:false },
+          datalabels:{ display:false }
+        }
+      }
+    });
+    pieCharts.push(c1);
+
+    // 범례 항상 표시 (색상 + 이름 + %)
+    const legEl = div1.querySelector(`#pie1leg_${i}`);
+    labels1.forEach((lbl, li) => {
+      const pct = (vals1[li]/total1*100).toFixed(1);
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:4px;font-size:0.68rem';
+      row.innerHTML = `
+        <span style="display:flex;align-items:center;gap:4px;color:var(--text-muted)">
+          <span style="width:8px;height:8px;border-radius:2px;background:${cols1[li]};flex-shrink:0;display:inline-block"></span>
+          ${lbl}
+        </span>
+        <span style="font-weight:700;color:${cols1[li]}">${pct}%</span>`;
+      legEl.appendChild(row);
+    });
+
+    // ---- 총자산 100% 파이: 기금자산 vs 기타자산 두 조각만 ----
+    const div2 = document.createElement('div');
+    div2.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column';
+    div2.innerHTML = `
+      <div style="font-size:0.76rem;font-weight:700;color:${org.color};margin-bottom:8px;text-align:center">${org.key}</div>
+      <div style="position:relative;height:130px"><canvas id="pie2_${i}"></canvas></div>
+      <div id="pie2leg_${i}" style="margin-top:10px;display:flex;flex-direction:column;gap:4px"></div>
+    `;
+    wrap2.appendChild(div2);
+
+    const ctx2 = div2.querySelector(`#pie2_${i}`).getContext('2d');
+    const pie2Labels = ['기금자산','기타자산'];
+    const pie2Vals   = [fa, other];
+    const pie2Cols   = [org.color+'dd', '#334155'];
+    const pie2Total  = fa + other;
+
+    const c2 = new Chart(ctx2, {
+      type:'doughnut',
+      data:{
+        labels: pie2Labels,
+        datasets:[{ data:pie2Vals, backgroundColor:pie2Cols, borderColor:'#ffffff', borderWidth:2 }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false, cutout:'52%',
+        plugins:{
+          legend:{ display:false },
+          datalabels:{ display:false }
+        }
+      }
+    });
+    pieCharts.push(c2);
+
+    // 범례 항상 표시
+    const legEl2 = div2.querySelector(`#pie2leg_${i}`);
+    pie2Labels.forEach((lbl, li) => {
+      const pct = (pie2Vals[li]/pie2Total*100).toFixed(1);
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:4px;font-size:0.68rem';
+      row.innerHTML = `
+        <span style="display:flex;align-items:center;gap:4px;color:var(--text-muted)">
+          <span style="width:8px;height:8px;border-radius:2px;background:${pie2Cols[li]};flex-shrink:0;display:inline-block"></span>
+          ${lbl}
+        </span>
+        <span style="font-weight:700;color:${li===0?org.color:'#94a3b8'}">${pct}%</span>`;
+      legEl2.appendChild(row);
+    });
+  });
+
+  // 각 카드에 범례 내장됨 — 별도 공통 범례 불필요
+}
+
+function buildAllocStack() {
+  const ctx = document.getElementById('allocStackChart').getContext('2d');
+  new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: KEYS,
+      datasets:[
+        { label:'주식',    data:KEYS.map(k=>(DATA[k].stock.total/DATA[k].fundAsset*100).toFixed(1)), backgroundColor:'#4f9cf9cc', borderRadius:0 },
+        { label:'채권',    data:KEYS.map(k=>(DATA[k].bond.total/DATA[k].fundAsset*100).toFixed(1)),  backgroundColor:'#22c55ecc', borderRadius:0 },
+        { label:'대체투자',data:KEYS.map(k=>(DATA[k].alt.total/DATA[k].fundAsset*100).toFixed(1)),   backgroundColor:'#a855f7cc', borderRadius:0 },
+        { label:'단기자금',data:KEYS.map(k=>(DATA[k].short.total/DATA[k].fundAsset*100).toFixed(1)), backgroundColor:'#f97316cc', borderRadius:0 },
+        { label:'전략투자',data:KEYS.map(k=>(DATA[k].strat.total/DATA[k].fundAsset*100).toFixed(1)), backgroundColor:'#eab308cc', borderRadius:{topLeft:4,topRight:4} },
+      ]
+    },
+    options:{ ...baseOpts,
+      scales:{
+        x:{...baseOpts.scales.x,stacked:true},
+        y:{...baseOpts.scales.y,stacked:true,max:105,title:{display:true,text:'%',color:'#6b7280',font:{size:10}}}
+      },
+      plugins:{...baseOpts.plugins,
+        datalabels:{
+          display:ctx=>parseFloat(ctx.dataset.data[ctx.dataIndex])>4,
+          color:'#fff', font:{size:9,weight:600},
+          formatter:v=>parseFloat(v).toFixed(0)+'%'
+        }
+      }
+    }
+  });
+}
+
+function buildAllocTable() {
+  const tbl = document.getElementById('allocTable');
+  // 기금자산 기준 행 (세부 자산군)
+  const fundRows = [
+    {label:'주식',       isMain:true,  fa:d=>(d.stock.total/d.fundAsset*100)},
+    {label:'└국내주식',  isMain:false, fa:d=>(d.stock.domestic/d.fundAsset*100)},
+    {label:'└해외주식',  isMain:false, fa:d=>(d.stock.foreign/d.fundAsset*100)},
+    {label:'채권',       isMain:true,  fa:d=>(d.bond.total/d.fundAsset*100)},
+    {label:'└국내채권',  isMain:false, fa:d=>(d.bond.domestic/d.fundAsset*100)},
+    {label:'└해외채권',  isMain:false, fa:d=>(d.bond.foreign/d.fundAsset*100)},
+    {label:'대체투자',   isMain:true,  fa:d=>(d.alt.total/d.fundAsset*100)},
+    {label:'└국내대체',  isMain:false, fa:d=>(d.alt.domestic/d.fundAsset*100)},
+    {label:'└해외대체',  isMain:false, fa:d=>(d.alt.foreign/d.fundAsset*100)},
+    {label:'단기자금',   isMain:true,  fa:d=>(d.short.total/d.fundAsset*100)},
+    {label:'전략투자',   isMain:true,  fa:d=>(d.strat.total/d.fundAsset*100)},
+    {label:'기금자산 합계', isMain:true, fa:d=>100},
+  ];
+  // 총자산 기준 행 (기금+기타만)
+  const totalRows = [
+    {label:'기금자산', ta:d=>(d.fundAsset/d.totalAsset*100)},
+    {label:'기타자산', ta:d=>((d.totalAsset-d.fundAsset)/d.totalAsset*100)},
+    {label:'총자산 합계', ta:d=>100},
+  ];
+
+  tbl.innerHTML = `
+  <!-- 섹션 1: 기금자산 100% -->
+  <thead>
+    <tr><th colspan="${1 + ORGS.length}" style="text-align:left;background:rgba(79,156,249,0.12);color:#4f9cf9;font-size:0.78rem;padding:8px 12px;letter-spacing:0.04em">
+      ① 기금자산 기준 (기금자산 = 100%)
+    </th></tr>
+    <tr>
+      <th style="text-align:left">자산군</th>
+      ${ORGS.map(o=>`<th><span class="dot" style="background:${o.color}"></span>${o.key}</th>`).join('')}
+    </tr>
+  </thead>
+  <tbody>
+  ${fundRows.map(row=>{
+    const isSub = !row.isMain;
+    const isTotal = row.label.includes('합계');
+    return `<tr class="${isTotal?'tr-total':''}">
+      <td style="${isSub?'padding-left:18px;color:var(--text-muted);font-weight:400;font-size:0.75rem':''}${isTotal?'font-weight:800':''}">${row.label}</td>
+      ${ORGS.map(org=>{
+        const d=DATA[org.key];
+        const fv=row.fa(d);
+        return `<td style="${org.isUs?'font-weight:700':''}${isTotal?'font-weight:800':''}">
+          ${fv.toFixed(1)}%
+        </td>`;
+      }).join('')}
+    </tr>`;
+  }).join('')}
+  <!-- 섹션 구분선 -->
+  <tr><td colspan="${1+ORGS.length}" style="height:0;border-bottom:2px solid var(--border);padding:0"></td></tr>
+  <!-- 섹션 2: 총자산 100% -->
+  <tr><td colspan="${1+ORGS.length}" style="text-align:left;background:rgba(234,179,8,0.1);color:#eab308;font-size:0.78rem;padding:8px 12px;letter-spacing:0.04em;font-weight:700">
+    ② 총자산 기준 (총자산 = 100%)
+  </td></tr>
+  ${totalRows.map(row=>{
+    const isTotal = row.label.includes('합계');
+    return `<tr class="${isTotal?'tr-total':''}">
+      <td style="${isTotal?'font-weight:800':''}">${row.label}</td>
+      ${ORGS.map(org=>{
+        const d=DATA[org.key];
+        const tv=row.ta(d);
+        return `<td style="${org.isUs?'font-weight:700':''}${isTotal?'font-weight:800':''}">${tv.toFixed(1)}%</td>`;
+      }).join('')}
+    </tr>`;
+  }).join('')}
+  </tbody>`;
+}
+
+// ===================== TAB 3: 수익률 =====================
+function buildPerfBar(id, label, getter) {
+  const ctx = document.getElementById(id).getContext('2d');
+  const vals = KEYS.map(k => getter(DATA[k]));
+  new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:KEYS,
+      datasets:[{label,data:vals,backgroundColor:COLORS.map(c=>c+'bb'),borderColor:COLORS,borderWidth:1.5,borderRadius:5}]
+    },
+    options:{...baseOpts,
+      plugins:{...baseOpts.plugins,
+        datalabels:{display:true,color:'#1a1f2e',anchor:'end',align:'top',font:{size:10,weight:700},
+          formatter:v=>v===null?'-':v.toFixed(1)+'%'}
+      }
+    }
+  });
+}
+
+function buildPerfCharts() {
+  buildPerfBar('perfEquity','주식 수익률',d=>d.stock.ret_all);
+  buildPerfBar('perfBond','채권 수익률',d=>d.bond.ret_all);
+  buildPerfBar('perfAlt','대체투자 수익률',d=>d.alt.ret_all);
+  buildPerfBar('perfShort','단기자금 수익률',d=>d.short.ret);
+}
+
+function buildPerfTable() {
+  const tbl = document.getElementById('perfTable');
+  const rows = [
+    {label:'기금자산 수익률',isMain:true,g:d=>d.fundReturn},
+    {label:'주식',isMain:true,g:d=>d.stock.ret_all},
+    {label:'└국내주식',isMain:false,g:d=>d.stock.ret_dom},
+    {label:'└해외주식',isMain:false,g:d=>d.stock.ret_for},
+    {label:'채권',isMain:true,g:d=>d.bond.ret_all},
+    {label:'└국내채권',isMain:false,g:d=>d.bond.ret_dom},
+    {label:'└해외채권',isMain:false,g:d=>d.bond.ret_for},
+    {label:'대체투자',isMain:true,g:d=>d.alt.ret_all},
+    {label:'└국내대체',isMain:false,g:d=>d.alt.ret_dom},
+    {label:'└해외대체',isMain:false,g:d=>d.alt.ret_for},
+    {label:'단기자금',isMain:true,g:d=>d.short.ret},
+  ];
+  tbl.innerHTML = `<thead><tr>
+    <th style="text-align:left">구분</th>
+    ${ORGS.map((o,i)=>`<th><span class="dot" style="background:${o.color}"></span>${o.key}</th>`).join('')}
+  </tr></thead><tbody>
+  ${rows.map(row=>{
+    const isMain=row.isMain; const isSub=!isMain;
+    return `<tr class="${isMain?'tr-total':''}">
+      <td style="${isSub?'padding-left:18px;color:var(--text-muted);font-weight:400;font-size:0.75rem':''}">
+        ${row.label}
+      </td>
+      ${KEYS.map(k=>{
+        const v=row.g(DATA[k]);
+        return `<td class="${cc(v)}" style="${k==='소방'?'font-weight:800':''}">
+          ${v===null?'<span class="nm">-</span>':v.toFixed(2)+'%'}
+        </td>`;
+      }).join('')}
+    </tr>`;
+  }).join('')}
+  </tbody>`;
+}
+
+// ===================== TAB 4: 기관별 상세 =====================
+let activeKey = '소방';
+let detailCharts = {};
+
+function buildOrgFilter() {
+  const f = document.getElementById('orgFilter');
+  f.innerHTML = ORGS.map((org,i)=>
+    `<button class="org-chip ${org.key===activeKey?'active':''}"
+      style="${org.key===activeKey?`background:${org.color};color:#000`:''}"
+      onclick="selectOrg('${org.key}',${i})">${org.key}${org.isUs?' ★':''}</button>`
+  ).join('');
+}
+
+function selectOrg(key) {
+  activeKey = key;
+  buildOrgFilter();
+  buildDetail();
+}
+
+function buildDetail() {
+  Object.values(detailCharts).forEach(c=>c.destroy());
+  detailCharts = {};
+  const d = DATA[activeKey];
+  const org = ORGS.find(o=>o.key===activeKey);
+  const color = org.color;
+  const other = d.totalAsset - d.fundAsset;
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="grid-2 mb20">
+      <div class="card">
+        <div class="section-title">기금자산 구성 (기금=100%)</div>
+        <div class="chart-wrap h280"><canvas id="d_pie1"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="section-title">총자산 구성 (총자산=100%)</div>
+        <div class="chart-wrap h280"><canvas id="d_pie2"></canvas></div>
+      </div>
+    </div>
+    <div class="grid-2 mb20">
+      <div class="card">
+        <div class="section-title">자산군별 수익률</div>
+        <div class="chart-wrap h240"><canvas id="d_ret"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="section-title">핵심 지표</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          ${[
+            ['총자산',fmt(d.totalAsset)+'억',''],
+            ['기금자산',fmt(d.fundAsset)+'억',''],
+            ['기타자산',fmt(Math.round(other))+'억',''],
+            ['기금손익',fmt(Math.round(d.income))+'억','up'],
+            ['기금수익률',d.fundReturn.toFixed(2)+'%','up'],
+            ['대체투자비중',(d.alt.total/d.fundAsset*100).toFixed(1)+'%',''],
+          ].map(([lbl,val,cls])=>`
+            <div style="background:var(--surface2);border-radius:8px;padding:14px;border:1px solid var(--border)">
+              <div style="font-size:0.7rem;color:var(--text-muted)">${lbl}</div>
+              <div style="font-size:1.1rem;font-weight:800;margin-top:4px;color:${cls==='up'?'#4ade80':color}">${val}</div>
+            </div>`).join('')}
+        </div>
+        ${d.note?`<p class="footnote" style="margin-top:12px">※ ${d.note}</p>`:''}
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">${activeKey} 자산군 상세</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th style="text-align:left">자산군</th><th>보유금액(억)</th><th>기금내 비중</th><th>총자산 비중</th><th>국내(억)</th><th>해외(억)</th><th>수익률</th></tr></thead>
+          <tbody>
+            ${[
+              ['주식',d.stock.total,d.stock.domestic,d.stock.foreign,d.stock.ret_all],
+              ['채권',d.bond.total,d.bond.domestic,d.bond.foreign,d.bond.ret_all],
+              ['대체투자',d.alt.total,d.alt.domestic,d.alt.foreign,d.alt.ret_all],
+              ['단기자금',d.short.total,null,null,d.short.ret],
+              d.strat.total>0?['전략투자',d.strat.total,null,null,null]:null,
+              ['기타자산',other,null,null,null],
+            ].filter(Boolean).map(([lbl,tot,dom,for_,ret])=>`
+            <tr class="tr-total">
+              <td>${lbl}</td>
+              <td>${fmt(Math.round(tot))}</td>
+              <td>${lbl==='기타자산'?'-':(tot/d.fundAsset*100).toFixed(1)+'%'}</td>
+              <td>${(tot/d.totalAsset*100).toFixed(1)}%</td>
+              <td>${dom!==null?fmt(Math.round(dom)):'-'}</td>
+              <td>${for_!==null?fmt(Math.round(for_)):'-'}</td>
+              <td class="${cc(ret)}">${ret!==null?ret.toFixed(2)+'%':'-'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  // 도넛 1: 기금자산
+  const labels1 = ['주식','채권','대체투자','단기자금','전략투자'].filter((_,i)=>[d.stock.total,d.bond.total,d.alt.total,d.short.total,d.strat.total][i]>0);
+  const vals1 = [d.stock.total,d.bond.total,d.alt.total,d.short.total,d.strat.total].filter(v=>v>0);
+  detailCharts.pie1 = new Chart(document.getElementById('d_pie1').getContext('2d'), {
+    type:'doughnut',
+    data:{labels:labels1,datasets:[{data:vals1,backgroundColor:labels1.map(l=>PIE_COLORS[l]),borderColor:'#ffffff',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+      plugins:{legend:{position:'right',labels:{color:'#6b7280',font:{size:10},boxWidth:10}},
+        datalabels:{display:true,color:'#fff',font:{size:9,weight:700},formatter:(v,c)=>{
+          const tot=c.dataset.data.reduce((a,b)=>a+b,0);
+          return (v/tot*100).toFixed(1)+'%';
+        }}
+      }
+    }
+  });
+
+  // 도넛 2: 총자산
+  const labels2 = ['주식','채권','대체투자','단기자금','전략투자','기타자산'];
+  const vals2 = [d.stock.total,d.bond.total,d.alt.total,d.short.total,d.strat.total,other].filter(v=>v>0);
+  const lbls2f = labels2.filter((_,i)=>[d.stock.total,d.bond.total,d.alt.total,d.short.total,d.strat.total,other][i]>0);
+  detailCharts.pie2 = new Chart(document.getElementById('d_pie2').getContext('2d'), {
+    type:'doughnut',
+    data:{labels:lbls2f,datasets:[{data:vals2,backgroundColor:lbls2f.map(l=>PIE_COLORS[l]),borderColor:'#ffffff',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+      plugins:{legend:{position:'right',labels:{color:'#6b7280',font:{size:10},boxWidth:10}},
+        datalabels:{display:ctx=>(ctx.dataset.data[ctx.dataIndex]/vals2.reduce((a,b)=>a+b,0)*100)>3,color:'#fff',font:{size:9,weight:700},formatter:(v,c)=>{
+          const tot=c.dataset.data.reduce((a,b)=>a+b,0);
+          return (v/tot*100).toFixed(1)+'%';
+        }}
+      }
+    }
+  });
+
+  // 수익률 바
+  detailCharts.ret = new Chart(document.getElementById('d_ret').getContext('2d'), {
+    type:'bar',
+    data:{
+      labels:['주식','채권','대체투자','단기자금'],
+      datasets:[{label:'수익률',data:[d.stock.ret_all,d.bond.ret_all,d.alt.ret_all,d.short.ret],
+        backgroundColor:['#4f9cf9bb','#22c55ebb','#a855f7bb','#f97316bb'],borderRadius:5}]
+    },
+    options:{...baseOpts,
+      plugins:{...baseOpts.plugins,datalabels:{display:true,color:'#1a1f2e',anchor:'end',align:'top',font:{size:11,weight:700},formatter:v=>v!==null?v.toFixed(1)+'%':'-'}}
+    }
+  });
+}
+
+// ===================== SWITCH =====================
+let built = {overview:false,allocation:false,performance:false,detail:false};
+function switchTab(tab, btn) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  btn.classList.add('active');
+
+  if (tab==='overview' && !built.overview) {
+    buildReturnBar(); buildAUMBar(); buildScatter(); buildHeatTable(); buildSummaryTable();
+    built.overview=true;
+  }
+  if (tab==='allocation' && !built.allocation) {
+    buildPies(); buildAllocStack(); buildAllocTable();
+    built.allocation=true;
+  }
+  if (tab==='performance' && !built.performance) {
+    buildPerfCharts(); buildPerfTable();
+    built.performance=true;
+  }
+  if (tab==='detail' && !built.detail) {
+    buildOrgFilter(); buildDetail();
+    built.detail=true;
+  }
+}
+
+// ===================== INIT =====================
+document.addEventListener('DOMContentLoaded', () => {
+  buildKPI();
+  buildReturnBar(); buildAUMBar(); buildScatter(); buildHeatTable(); buildSummaryTable();
+  built.overview = true;
+});
+</script>
+</body>
+</html>
